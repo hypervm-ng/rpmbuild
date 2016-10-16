@@ -191,7 +191,7 @@ rm -rf %{buildroot}
 %doc
 
 %changelog
-* Thu Oct 16 2016 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.5.38-1
+* Sun Oct 16 2016 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.5.38-1
 - Upstream 5.5.38
 - Removed LxCenter references
 - RHEL7 ready
@@ -226,18 +226,18 @@ rm -rf %{buildroot}
 - Remove mysql support deprecated (test)
 - Big PHP version jump
 
-* Thu Feb 11 2011 Danny Terweij <d.terweij@lxcenter.org> 5.2.17-0.lxcenter.4
+* Fri Feb 11 2011 Danny Terweij <d.terweij@lxcenter.org> 5.2.17-0.lxcenter.4
 - Obsolete lxphp-5.2.1-400 i386 package
 
-* Thu Feb 11 2011 Danny Terweij <d.terweij@lxcenter.org> 5.2.17-0.lxcenter.3
+* Fri Feb 11 2011 Danny Terweij <d.terweij@lxcenter.org> 5.2.17-0.lxcenter.3
 - Replace php.ini
 - Replace php.1
 
-* Thu Feb 11 2011 Danny Terweij <d.terweij@lxcenter.org> 5.2.17-0.lxcenter.2
+* Fri Feb 11 2011 Danny Terweij <d.terweij@lxcenter.org> 5.2.17-0.lxcenter.2
 - Fix php.ini
 - Upgrade to PHP 5.2.17
 
-* Thu Jan 04 2011 Danny Terweij <d.terweij@lxcenter.org> 5.2.16-0.lxcenter.1
+* Tue Jan 04 2011 Danny Terweij <d.terweij@lxcenter.org> 5.2.16-0.lxcenter.1
 - Repackaged at build system
 - Upgrade to PHP 5.2.16
 
