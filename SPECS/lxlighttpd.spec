@@ -6,7 +6,7 @@ License: BSD
 Group: System Environment/Daemons
 URL: http://www.hypervm-ng.org
 Source0: lighttpd-%{version}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
+BuildRoot: %{_tmppath}/lighttpd-%{version}-%{release}-root
 Requires(pre): /usr/sbin/useradd
 Provides: webserver
 BuildRequires: openssl-devel, pcre-devel, bzip2-devel, zlib-devel
