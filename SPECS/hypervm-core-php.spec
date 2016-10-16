@@ -15,7 +15,9 @@ URL: http://www.hypervm-ng.org
 SOURCE0: %{packagename}-%{version}.tar.bz2
 SOURCE1: hypervm-core-php.ini
 
+%if 0%{?fedora} < 18 && 0%{?rhel} < 7
 BuildRequires: rpmlib
+%endif
 BuildRequires: bzip2-devel, curl-devel >= 7.9, db4-devel, expat-devel
 BuildRequires: libcurl-devel
 BuildRequires: gmp-devel, aspell-devel >= 0.50.0
