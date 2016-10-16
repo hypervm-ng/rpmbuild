@@ -30,7 +30,7 @@ BuildRequires: libmcrypt-devel, mhash-devel, mysql-devel, postgresql-devel
 BuildRequires: libdb4-devel
 %else
 BuildRequires: libdb-devel
-%fi
+%endif
 BuildRequires: libpng-devel
 
 Obsoletes: php-dbg, php3, phpfi, stronghold-php, lxphp <= 5.2.1
