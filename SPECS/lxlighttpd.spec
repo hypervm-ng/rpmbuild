@@ -1,6 +1,6 @@
 Summary: Webserver for LxCenter products (based on lighttpd)
 Name: lxlighttpd
-Version: 1.4.42
+Version: 1.4.39
 Release: 1%{?dist}
 License: BSD
 Group: System Environment/Daemons
@@ -116,20 +116,20 @@ This is the Core GUI webserver for HyperVM-NG product (based on lighttpd)
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_usertrack.so"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_webdav.la"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_webdav.so"
-%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_file.la"
-%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_file.so"
-%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_gssapi.la"
-%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_gssapi.so"
-%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_ldap.la"
-%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_ldap.so"
-%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_mysql.la"
-%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_mysql.so"
-%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_deflate.la"
-%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_deflate.so"
-%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_geoip.la"
-%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_geoip.so"
-%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_uploadprogress.la"
-%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_uploadprogress.so"
+# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_file.la"
+# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_file.so"
+# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_gssapi.la"
+# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_gssapi.so"
+# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_ldap.la"
+# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_ldap.so"
+# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_mysql.la"
+# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_mysql.so"
+# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_deflate.la"
+# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_deflate.so"
+# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_geoip.la"
+# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_geoip.so"
+# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_uploadprogress.la"
+# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_uploadprogress.so"
 %dir %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/sbin"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/sbin/lighttpd"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/sbin/lighttpd-angel"
@@ -139,6 +139,9 @@ This is the Core GUI webserver for HyperVM-NG product (based on lighttpd)
 %attr(0644 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/share/man/man8/lighttpd.8"
 
 %changelog
+* Sun Oct 16 2016 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 1.4.39-1
+- Downgrade to 1.4.39, newer versions have an issue with login into HyperVM
+
 * Sun Oct 16 2016 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 1.4.42-1
 - Upstream 1.4.42
 - Removed LxCenter references
