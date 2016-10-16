@@ -15,12 +15,6 @@ URL: http://www.hypervm-ng.org
 SOURCE0: %{packagename}-%{version}.tar.bz2
 SOURCE1: hypervm-core-php.ini
 
-BuildRoot: %{_tmppath}/%{packagename}-%{version}-%{release}-root-%(%{__id_u} -n)
-
-%description
-PHP is a server-side scripting language designed for web development
-but also used as a general-purpose programming language.
-
 BuildRequires: rpmlib
 BuildRequires: bzip2-devel, curl-devel >= 7.9, db4-devel, expat-devel
 BuildRequires: libcurl-devel
@@ -32,9 +26,21 @@ BuildRequires: bzip2, perl, libtool >= 1.4.3, gcc-c++
 BuildRequires: libxml2-devel, openssl-devel, libcurl-devel, gdbm-devel
 BuildRequires: libjpeg-turbo-devel, gmp-devel, libc-client-devel
 BuildRequires: libmcrypt-devel, mhash-devel, mysql-devel, postgresql-devel
-BuildRequires: gdbm-devel
+%if 0%{?fedora} < 18 && 0%{?rhel} < 7
+BuildRequires: libdb4-devel
+%else
+BuildRequires: libdb-devel
+%fi
+BuildRequires: libpng-devel
+
 Obsoletes: php-dbg, php3, phpfi, stronghold-php, lxphp <= 5.2.1
 Requires: libmhash
+
+BuildRoot: %{_tmppath}/%{packagename}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+%description
+PHP is a server-side scripting language designed for web development
+but also used as a general-purpose programming language.
 
 %pre
 echo "Info: Starting HyperVM-NG checks..."
