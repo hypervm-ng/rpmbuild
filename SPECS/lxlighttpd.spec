@@ -20,7 +20,7 @@ BuildRequires: readline-devel
 This is the Core GUI webserver for HyperVM-NG product (based on lighttpd)
 
 %prep
-%setup -q
+%setup -q -n lighttpd-%{version}
 
 %build
 %configure \
@@ -116,6 +116,20 @@ This is the Core GUI webserver for HyperVM-NG product (based on lighttpd)
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_usertrack.so"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_webdav.la"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_webdav.so"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_file.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_file.so"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_gssapi.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_gssapi.so"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_ldap.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_ldap.so"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_mysql.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_mysql.so"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_deflate.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_deflate.so"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_geoip.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_geoip.so"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_uploadprogress.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_uploadprogress.so"
 %dir %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/sbin"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/sbin/lighttpd"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/sbin/lighttpd-angel"
