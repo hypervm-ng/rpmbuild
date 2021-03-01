@@ -10,6 +10,7 @@ BuildRoot: %{_tmppath}/lighttpd-%{version}-%{release}-root
 Requires(pre): /usr/sbin/useradd
 Provides: webserver
 BuildRequires: openssl-devel, pcre-devel, bzip2-devel, zlib-devel
+BuildRequires:  mysql-devel
 BuildRequires: /usr/bin/awk
 BuildRequires: lua-devel
 %if 0%{?rhel} <= 5
