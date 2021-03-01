@@ -1,0 +1,51 @@
+From 2c204a55af9b903b3db48dd5a75d492dbf1b387d Mon Sep 17 00:00:00 2001
+From: Remi Collet <remi@php.net>
+Date: Mon, 31 Mar 2014 16:50:47 +0200
+Subject: [PATCH] Fixed Bug #66987 Memory corruption in fileinfo ext
+ (bigendian)
+
+On little endian:
+	map->p == php_magic_database
+	map->magic[i] = pointer into the map
+
+	map->p == NULL
+	map->magic[i] = pointer to allocated memory
+
+On big endian (ppc64, s390x, ...):
+	map->p != php_magic_database and map->p != NULL
+        map->magic[i] = pointer into a copy of the map
+
+Trying to efree pointer in the later cause memory corruption
+Thanks to dkatulek / Red Hat for the report.
+---
+ ext/fileinfo/libmagic/apprentice.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/ext/fileinfo/libmagic/apprentice.c b/ext/fileinfo/libmagic/apprentice.c
+index 11920e6..fd82564 100644
+--- a/ext/fileinfo/libmagic/apprentice.c
++++ b/ext/fileinfo/libmagic/apprentice.c
+@@ -493,12 +493,14 @@ apprentice_unmap(struct magic_map *map)
+ 	if (map == NULL)
+ 		return;
+ 	if (map->p != php_magic_database) {
+-		int j;
+-		for (j = 0; j < MAGIC_SETS; j++) {
+-			if (map->magic[j])
+-				efree(map->magic[j]);
+-		}
+-		if (map->p != NULL) {
++		if (map->p == NULL) {
++			int j;
++			for (j = 0; j < MAGIC_SETS; j++) {
++				if (map->magic[j]) {
++					efree(map->magic[j]);
++				}
++			}
++		} else {
+ 			efree(map->p);
+ 		}
+ 	}
+-- 
+2.1.0
+

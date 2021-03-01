@@ -1,0 +1,40 @@
+From 17f6391bf8bc5e0e74ea981c795455a18826ed35 Mon Sep 17 00:00:00 2001
+From: Remi Collet <remi@php.net>
+Date: Fri, 14 Mar 2014 09:50:15 +0100
+Subject: [PATCH] Fixed Bug #66833 Default digest algo is still MD5
+
+Switch to SHA1, which match internal openssl hardcoded algo.
+
+In most case, won't even be noticed
+- priority on user input (default_md)
+- fallback on system config
+- fallback on this default value
+
+Recent system reject MD5 digest, noticed in bug36732.phpt failure.
+
+While SHA1 is better than MD5, SHA256 is recommenced,
+and defined as default algo in provided configuration on
+recent system (Fedora 21, RHEL-7, ...). But the idea is to
+keep in sync with openssl internal value for PHP internal value.
+---
+ ext/openssl/openssl.c         | 2 +-
+ ext/openssl/tests/openssl.cnf | 1 -
+ 2 files changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/ext/openssl/openssl.c b/ext/openssl/openssl.c
+index b2ac712..88ad2ef 100755
+--- a/ext/openssl/openssl.c
++++ b/ext/openssl/openssl.c
+@@ -855,7 +855,7 @@ static int php_openssl_parse_config(struct php_x509_request * req, zval * option
+ 		req->digest = req->md_alg = EVP_get_digestbyname(req->digest_name);
+ 	}
+ 	if (req->md_alg == NULL) {
+-		req->md_alg = req->digest = EVP_md5();
++		req->md_alg = req->digest = EVP_sha1();
+ 	}
+ 
+ 	PHP_SSL_CONFIG_SYNTAX_CHECK(extensions_section);
+ 
+-- 
+2.1.4
+

@@ -1,0 +1,25 @@
+Adapted for 5.4.16 from
+https://github.com/php/php-src/commit/1f843a8fb50de77a3f53a6b892a46d9e0afdfdd7
+
+See https://bugzilla.redhat.com/1408301
+
+
+diff -up ./ext/openssl/openssl.c.old ./ext/openssl/openssl.c
+--- ./ext/openssl/openssl.c.old	2018-06-19 14:29:32.461412077 +0200
++++ ./ext/openssl/openssl.c	2018-06-19 14:29:56.351152059 +0200
+@@ -1038,6 +1038,7 @@ PHP_MINIT_FUNCTION(openssl)
+ 	le_x509 = zend_register_list_destructors_ex(php_x509_free, NULL, "OpenSSL X.509", module_number);
+ 	le_csr = zend_register_list_destructors_ex(php_csr_free, NULL, "OpenSSL X.509 CSR", module_number);
+ 
++	OPENSSL_config(NULL); 
+ 	SSL_library_init();
+ 	OpenSSL_add_all_ciphers();
+ 	OpenSSL_add_all_digests();
+@@ -1178,6 +1179,7 @@ PHP_MINFO_FUNCTION(openssl)
+ PHP_MSHUTDOWN_FUNCTION(openssl)
+ {
+ 	EVP_cleanup();
++	CONF_modules_free();
+ 
+ 	php_unregister_url_stream_wrapper("https" TSRMLS_CC);
+ 	php_unregister_url_stream_wrapper("ftps" TSRMLS_CC);
