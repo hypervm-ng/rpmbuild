@@ -1,0 +1,613 @@
+Adapted for 5.4.16 from
+
+From 52b93f0cfd3cba7ff98cc5198df6ca4f23865f80 Mon Sep 17 00:00:00 2001
+From: Stanislav Malyshev <stas@php.net>
+Date: Sun, 5 Apr 2015 16:01:24 -0700
+Subject: [PATCH] Fixed bug #69353 (Missing null byte checks for paths in
+ various PHP extensions)
+
+---
+ ext/dom/document.c                                 | 5 ++++-
+ ext/dom/tests/DOMDocument_loadHTMLfile_error2.phpt | 5 +++++
+ ext/fileinfo/fileinfo.c                            | 5 +++++
+ ext/fileinfo/tests/finfo_file_basic.phpt           | 4 ++++
+ ext/gd/gd.c                                        | 8 ++++----
+ ext/hash/hash.c                                    | 7 ++++++-
+ ext/hash/tests/hash_hmac_file_error.phpt           | 7 +++++++
+ ext/pgsql/pgsql.c                                  | 2 +-
+ ext/standard/link.c                                | 2 +-
+ ext/standard/streamsfuncs.c                        | 2 +-
+ ext/xmlwriter/php_xmlwriter.c                      | 4 ++--
+ ext/zlib/zlib.c                                    | 4 ++--
+ 12 files changed, 42 insertions(+), 13 deletions(-)
+
+diff --git a/ext/dom/document.c b/ext/dom/document.c
+index 18c9cc6..7c5817a 100644
+--- a/ext/dom/document.c
++++ b/ext/dom/document.c
+@@ -1574,6 +1574,9 @@ static xmlDocPtr dom_document_parser(zval *id, int mode, char *source, int sourc
+ 	xmlInitParser();
+ 
+ 	if (mode == DOM_LOAD_FILE) {
++		if (CHECK_NULL_PATH(source, source_len)) {
++			return NULL;
++		}
+ 		char *file_dest = _dom_get_valid_file_path(source, resolved_path, MAXPATHLEN  TSRMLS_CC);
+ 		if (file_dest) {
+ 			ctxt = xmlCreateFileParserCtxt(file_dest);
+@@ -2165,7 +2165,7 @@ static void dom_load_html(INTERNAL_FUNCTION_PARAMETERS, int mode) /* {{{ */
+ 	
+ 	id = getThis();
+ 
+-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l", &source, &source_len, &options) == FAILURE) {
++	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p|l", &source, &source_len, &options) == FAILURE) {
+ 		return;
+ 	}
+ 
+diff --git a/ext/fileinfo/fileinfo.c b/ext/fileinfo/fileinfo.c
+index ead7585..9f651af 100644
+--- a/ext/fileinfo/fileinfo.c
++++ b/ext/fileinfo/fileinfo.c
+@@ -506,6 +506,11 @@ static void _php_finfo_get_type(INTERNAL_FUNCTION_PARAMETERS, int mode, int mime
+ 				RETVAL_FALSE;
+ 				goto clean;
+ 			}
++			if (CHECK_NULL_PATH(buffer, buffer_len)) {
++				php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid path");
++				RETVAL_FALSE;
++				goto clean;
++			}
+ 
+ 			wrap = php_stream_locate_url_wrapper(buffer, &tmp2, 0 TSRMLS_CC);
+ 
+diff --git a/ext/fileinfo/tests/finfo_file_basic.phpt b/ext/fileinfo/tests/finfo_file_basic.phpt
+index 20223fd..ee70e2e 100644
+--- a/ext/fileinfo/tests/finfo_file_basic.phpt
++++ b/ext/fileinfo/tests/finfo_file_basic.phpt
+@@ -19,6 +19,7 @@ echo "*** Testing finfo_file() : basic functionality ***\n";
+ var_dump( finfo_file( $finfo, __FILE__) );
+ var_dump( finfo_file( $finfo, __FILE__, FILEINFO_CONTINUE ) );
+ var_dump( finfo_file( $finfo, $magicFile ) );
++var_dump( finfo_file( $finfo, $magicFile.chr(0).$magicFile) );
+ 
+ ?>
+ ===DONE===
+@@ -27,4 +28,7 @@ var_dump( finfo_file( $finfo, $magicFile ) );
+ string(28) "text/x-php; charset=us-ascii"
+ string(22) "PHP script, ASCII text"
+ string(25) "text/plain; charset=utf-8"
++
++Warning: finfo_file(): Invalid path in %s/finfo_file_basic.php on line %d
++bool(false)
+ ===DONE===
+diff --git a/ext/gd/gd.c b/ext/gd/gd.c
+index cbc1d2b..322325e 100644
+--- a/ext/gd/gd.c
++++ b/ext/gd/gd.c
+@@ -1495,7 +1495,7 @@ PHP_FUNCTION(imageloadfont)
+ 	gdFontPtr font;
+ 	php_stream *stream;
+ 
+-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &file, &file_name) == FAILURE) {
++	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p", &file, &file_name) == FAILURE) {
+ 		return;
+ 	}
+ 
+@@ -2438,7 +2438,7 @@ static void _php_image_create_from(INTER
+ 	long ignore_warning;
+ #endif
+ 	if (image_type == PHP_GDIMG_TYPE_GD2PART) {
+-		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sllll", &file, &file_len, &srcx, &srcy, &width, &height) == FAILURE) {
++		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "pllll", &file, &file_len, &srcx, &srcy, &width, &height) == FAILURE) {
+ 			return;
+ 		}
+ 		if (width < 1 || height < 1) {
+@@ -2446,7 +2446,7 @@ static void _php_image_create_from(INTER
+ 			RETURN_FALSE;
+ 		}
+ 	} else {
+-		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &file, &file_len) == FAILURE) {
++		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p", &file, &file_len) == FAILURE) {
+ 			return;
+ 		}
+ 	}
+@@ -4178,7 +4178,7 @@ PHP_FUNCTION(imagepsencodefont)
+ 	char *enc, **enc_vector;
+ 	int enc_len, *f_ind;
+ 
+-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs", &fnt, &enc, &enc_len) == FAILURE) {
++	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rp", &fnt, &enc, &enc_len) == FAILURE) {
+ 		return;
+ 	}
+ 
+diff --git a/ext/hash/hash.c b/ext/hash/hash.c
+index abdc62b..9cd6b8e 100644
+--- a/ext/hash/hash.c
++++ b/ext/hash/hash.c
+@@ -142,6 +142,7 @@ static void php_hash_do_hash(INTERNAL_FU
+ 	}
+ 	if (isfilename) {
+ 		if (CHECK_NULL_PATH(data, data_len)) {
++			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid path");
+ 			RETURN_FALSE;
+ 		}
+ 		stream = php_stream_open_wrapper_ex(data, "rb", REPORT_ERRORS, NULL, DEFAULT_CONTEXT);
+@@ -222,6 +223,10 @@ static void php_hash_do_hash_hmac(INTERN
+ 		RETURN_FALSE;
+ 	}
+ 	if (isfilename) {
++		if (CHECK_NULL_PATH(data, data_len)) {
++			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid path");
++			RETURN_FALSE;
++		}
+ 		stream = php_stream_open_wrapper_ex(data, "rb", REPORT_ERRORS, NULL, DEFAULT_CONTEXT);
+ 		if (!stream) {
+ 			/* Stream will report errors opening file */
+@@ -449,7 +454,7 @@ PHP_FUNCTION(hash_update_file)
+ 	char *filename, buf[1024];
+ 	int filename_len, n;
+ 
+-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs|r", &zhash, &filename, &filename_len, &zcontext) == FAILURE) {
++	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rp|r", &zhash, &filename, &filename_len, &zcontext) == FAILURE) {
+ 		return;
+ 	}
+ 
+diff --git a/ext/hash/tests/hash_hmac_file_error.phpt b/ext/hash/tests/hash_hmac_file_error.phpt
+index 42ab122..26ba8aa 100644
+--- a/ext/hash/tests/hash_hmac_file_error.phpt
++++ b/ext/hash/tests/hash_hmac_file_error.phpt
+@@ -28,6 +28,9 @@ hash_hmac_file('crc32', $file, $key, TRUE, $extra_arg);
+ echo "\n-- Testing hash_hmac_file() function with invalid hash algorithm --\n";
+ hash_hmac_file('foo', $file, $key, TRUE);
+ 
++echo "\n-- Testing hash_hmac_file() function with bad path --\n";
++hash_hmac_file('crc32', $file.chr(0).$file, $key, TRUE);
++
+ ?>
+ ===Done===
+ --EXPECTF--
+@@ -51,4 +54,8 @@ Warning: hash_hmac_file() expects at most 4 parameters, 5 given in %s on line %d
+ -- Testing hash_hmac_file() function with invalid hash algorithm --
+ 
+ Warning: hash_hmac_file(): Unknown hashing algorithm: foo in %s on line %d
++
++-- Testing hash_hmac_file() function with bad path --
++
++Warning: hash_hmac_file(): Invalid path in %s on line %d
+ ===Done===
+\ No newline at end of file
+diff --git a/ext/pgsql/pgsql.c b/ext/pgsql/pgsql.c
+index 7af7e8b..23d55cb 100644
+--- a/ext/pgsql/pgsql.c
++++ b/ext/pgsql/pgsql.c
+@@ -2884,7 +2884,7 @@ PHP_FUNCTION(pg_trace)
+ 	php_stream *stream;
+ 	id = PGG(default_link);
+ 	
+-	if (zend_parse_parameters(argc TSRMLS_CC, "s|sr", &z_filename, &z_filename_len, &mode, &mode_len, &pgsql_link) == FAILURE) {
++	if (zend_parse_parameters(argc TSRMLS_CC, "p|sr", &z_filename, &z_filename_len, &mode, &mode_len, &pgsql_link) == FAILURE) {
+ 		return;
+ 	}
+ 
+diff --git a/ext/standard/link.c b/ext/standard/link.c
+index 0e40a0b..4ed2c5e 100644
+--- a/ext/standard/link.c
++++ b/ext/standard/link.c
+@@ -59,7 +59,7 @@ PHP_FUNCTION(readlink)
+ 	char buff[MAXPATHLEN];
+ 	int ret;
+ 
+-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &link, &link_len) == FAILURE) {
++	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p", &link, &link_len) == FAILURE) {
+ 		return;
+ 	}
+ 
+diff --git a/ext/standard/streamsfuncs.c b/ext/standard/streamsfuncs.c
+index 7ddfc66..4c2837e 100644
+--- a/ext/standard/streamsfuncs.c
++++ b/ext/standard/streamsfuncs.c
+@@ -1545,7 +1545,7 @@ PHP_FUNCTION(stream_resolve_include_path)
+ 	char *filename, *resolved_path;
+ 	int filename_len;
+ 
+-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &filename, &filename_len) == FAILURE) {
++	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p", &filename, &filename_len) == FAILURE) {
+ 		return;
+ 	}
+ 
+diff --git a/ext/xmlwriter/php_xmlwriter.c b/ext/xmlwriter/php_xmlwriter.c
+index 206d82a..7a650e2 100644
+--- a/ext/xmlwriter/php_xmlwriter.c
++++ b/ext/xmlwriter/php_xmlwriter.c
+@@ -1738,7 +1738,7 @@ static PHP_FUNCTION(xmlwriter_write_dtd_entity)
+ /* }}} */
+ #endif
+ 
+-/* {{{ proto resource xmlwriter_open_uri(resource xmlwriter, string source)
++/* {{{ proto resource xmlwriter_open_uri(string source)
+ Create new xmlwriter using source uri for output */
+ static PHP_FUNCTION(xmlwriter_open_uri)
+ {
+@@ -1759,7 +1759,7 @@ static PHP_FUNCTION(xmlwriter_open_uri)
+ 	void *ioctx;
+ #endif
+ 
+-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &source, &source_len) == FAILURE) {
++	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p", &source, &source_len) == FAILURE) {
+ 		return;
+ 	}
+ 	
+diff --git a/ext/zlib/zlib.c b/ext/zlib/zlib.c
+index d70198c..ec958e1 100644
+--- a/ext/zlib/zlib.c
++++ b/ext/zlib/zlib.c
+@@ -581,7 +581,7 @@ static PHP_FUNCTION(gzopen)
+ 	php_stream *stream;
+ 	long use_include_path = 0;
+ 
+-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|l", &filename, &filename_len, &mode, &mode_len, &use_include_path) == FAILURE) {
++	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ps|l", &filename, &filename_len, &mode, &mode_len, &use_include_path) == FAILURE) {
+ 		return;
+ 	}
+ 
+@@ -609,7 +609,7 @@ static PHP_FUNCTION(readgzfile)
+ 	int size;
+ 	long use_include_path = 0;
+ 
+-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l", &filename, &filename_len, &use_include_path) == FAILURE) {
++	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p|l", &filename, &filename_len, &use_include_path) == FAILURE) {
+ 		return;
+ 	}
+ 
+-- 
+2.1.4
+
+From 1defbb25ed69e7a1a90e2bcb2ee3b9190ea06577 Mon Sep 17 00:00:00 2001
+From: Stanislav Malyshev <stas@php.net>
+Date: Sun, 12 Apr 2015 00:56:02 -0700
+Subject: [PATCH] Fix test
+
+---
+ ext/standard/tests/file/readlink_variation1.phpt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ext/standard/tests/file/readlink_variation1.phpt b/ext/standard/tests/file/readlink_variation1.phpt
+index 1dae17c..d4f1a5f 100644
+--- a/ext/standard/tests/file/readlink_variation1.phpt
++++ b/ext/standard/tests/file/readlink_variation1.phpt
+@@ -65,7 +65,7 @@ bool(false)
+ Warning: readlink(): %s in %s on line %d
+ bool(false)
+ 
+-Warning: readlink() expects parameter 1 to be string, resource given in %s on line %d
++Warning: readlink() expects parameter 1 to be a valid path, resource given in %s on line %d
+ NULL
+ 
+ Warning: readlink(): %s in %s on line %d
+-- 
+2.1.4
+
+From a643ccfb90750e0d830106588d2a46af87706b5b Mon Sep 17 00:00:00 2001
+From: Stanislav Malyshev <stas@php.net>
+Date: Sun, 12 Apr 2015 20:53:09 -0700
+Subject: [PATCH] Fix tests
+
+---
+ ext/gd/tests/imageloadfont_error1.phpt    |  6 +++---
+ ext/zlib/tests/gzopen_variation1.phpt     | 28 ++++++++++++++--------------
+ ext/zlib/tests/readgzfile_variation1.phpt | 10 +++++-----
+ ext/zlib/tests/readgzfile_variation6.phpt |  4 ++--
+ 4 files changed, 24 insertions(+), 24 deletions(-)
+
+diff --git a/ext/gd/tests/imageloadfont_error1.phpt b/ext/gd/tests/imageloadfont_error1.phpt
+index 16d1a3c..418bbf3 100644
+--- a/ext/gd/tests/imageloadfont_error1.phpt
++++ b/ext/gd/tests/imageloadfont_error1.phpt
+@@ -3,7 +3,7 @@ Testing that imageloadfont() breaks on non-string first parameter
+ --CREDITS--
+ Neveo Harrison <neveoo [at] gmail [dot] com> #testfest #tek11
+ --SKIPIF--
+-<?php 
++<?php
+ 	if (!extension_loaded("gd")) die("skip GD not present");
+ ?>
+ --FILE--
+@@ -11,5 +11,5 @@ Neveo Harrison <neveoo [at] gmail [dot] com> #testfest #tek11
+ var_dump( imageloadfont(array()) );
+ ?>
+ --EXPECTF--
+-Warning: imageloadfont() expects parameter 1 to be string, array given in %s on line %d
+-NULL
+\ No newline at end of file
++Warning: imageloadfont() expects parameter 1 to be a valid path, array given in %s on line %d
++NULL
+diff --git a/ext/zlib/tests/gzopen_variation1.phpt b/ext/zlib/tests/gzopen_variation1.phpt
+index c5a47f4..bca48f3 100644
+--- a/ext/zlib/tests/gzopen_variation1.phpt
++++ b/ext/zlib/tests/gzopen_variation1.phpt
+@@ -1,17 +1,17 @@
+ --TEST--
+-Test gzopen() function : usage variation 
++Test gzopen() function : usage variation
+ --SKIPIF--
+-<?php 
++<?php
+ if (!extension_loaded("zlib")) {
+-	print "skip - zlib extension not loaded"; 
+-}	 
++	print "skip - zlib extension not loaded";
++}
+ ?>
+ --FILE--
+ <?php
+ /* Prototype  : resource gzopen(string filename, string mode [, int use_include_path])
+- * Description: Open a .gz-file and return a .gz-file pointer 
++ * Description: Open a .gz-file and return a .gz-file pointer
+  * Source code: ext/zlib/zlib.c
+- * Alias to functions: 
++ * Alias to functions:
+  */
+ 
+ echo "*** Testing gzopen() : usage variation ***\n";
+@@ -102,9 +102,9 @@ $inputs = array(
+ 
+       // unset data
+       'unset var' => @$unset_var,
+-      
++
+       // resource variable
+-      'resource' => $fp      
++      'resource' => $fp
+ );
+ 
+ // loop through each element of the array for filename
+@@ -158,19 +158,19 @@ Error: 2 - gzopen(0.5): failed to open stream: No such file or directory, %s(%d)
+ bool(false)
+ 
+ --empty array--
+-Error: 2 - gzopen() expects parameter 1 to be string, array given, %s(%d)
++Error: 2 - gzopen() expects parameter 1 to be a valid path, array given, %s(%d)
+ NULL
+ 
+ --int indexed array--
+-Error: 2 - gzopen() expects parameter 1 to be string, array given, %s(%d)
++Error: 2 - gzopen() expects parameter 1 to be a valid path, array given, %s(%d)
+ NULL
+ 
+ --associative array--
+-Error: 2 - gzopen() expects parameter 1 to be string, array given, %s(%d)
++Error: 2 - gzopen() expects parameter 1 to be a valid path, array given, %s(%d)
+ NULL
+ 
+ --nested arrays--
+-Error: 2 - gzopen() expects parameter 1 to be string, array given, %s(%d)
++Error: 2 - gzopen() expects parameter 1 to be a valid path, array given, %s(%d)
+ NULL
+ 
+ --uppercase NULL--
+@@ -210,7 +210,7 @@ Error: 2 - gzopen(Class A object): failed to open stream: No such file or direct
+ bool(false)
+ 
+ --instance of classWithoutToString--
+-Error: 2 - gzopen() expects parameter 1 to be string, object given, %s(%d)
++Error: 2 - gzopen() expects parameter 1 to be a valid path, object given, %s(%d)
+ NULL
+ 
+ --undefined var--
+@@ -222,7 +222,7 @@ Error: 2 - gzopen(): Filename cannot be empty, %s(%d)
+ bool(false)
+ 
+ --resource--
+-Error: 2 - gzopen() expects parameter 1 to be string, resource given, %s(%d)
++Error: 2 - gzopen() expects parameter 1 to be a valid path, resource given, %s(%d)
+ NULL
+ ===DONE===
+ 
+diff --git a/ext/zlib/tests/readgzfile_variation1.phpt b/ext/zlib/tests/readgzfile_variation1.phpt
+index 5a5ec4f..5d9b639 100644
+--- a/ext/zlib/tests/readgzfile_variation1.phpt
++++ b/ext/zlib/tests/readgzfile_variation1.phpt
+@@ -29,15 +29,15 @@ foreach ( $variation as $var ) {
+ ===DONE===
+ --EXPECTF--
+ 
+-Warning: readgzfile() expects parameter 1 to be string, array given in %s on line %d
++Warning: readgzfile() expects parameter 1 to be a valid path, array given in %s on line %d
+ NULL
+ 
+-Warning: readgzfile() expects parameter 1 to be string, array given in %s on line %d
++Warning: readgzfile() expects parameter 1 to be a valid path, array given in %s on line %d
+ NULL
+ 
+-Warning: readgzfile() expects parameter 1 to be string, array given in %s on line %d
++Warning: readgzfile() expects parameter 1 to be a valid path, array given in %s on line %d
+ NULL
+ 
+-Warning: readgzfile() expects parameter 1 to be string, array given in %s on line %d
++Warning: readgzfile() expects parameter 1 to be a valid path, array given in %s on line %d
+ NULL
+-===DONE===
+\ No newline at end of file
++===DONE===
+diff --git a/ext/zlib/tests/readgzfile_variation6.phpt b/ext/zlib/tests/readgzfile_variation6.phpt
+index 702f918..9fcea02 100644
+--- a/ext/zlib/tests/readgzfile_variation6.phpt
++++ b/ext/zlib/tests/readgzfile_variation6.phpt
+@@ -45,5 +45,5 @@ foreach ( $variation as $var ) {
+ --EXPECTF--
+ Error: 2 - readgzfile(Class A object): failed to open stream: No such file or directory, %s(%d)
+ bool(false)
+-Error: 2 - readgzfile() expects parameter 1 to be string, object given, %s(%d)
+-NULL
+\ No newline at end of file
++Error: 2 - readgzfile() expects parameter 1 to be a valid path, object given, %s(%d)
++NULL
+-- 
+2.1.4
+
+From f7d7befae8bcc2db0093f8adaa9f72eeb7ad891e Mon Sep 17 00:00:00 2001
+From: Stanislav Malyshev <stas@php.net>
+Date: Sun, 31 May 2015 22:47:52 -0700
+Subject: [PATCH] Fix #69719 - more checks for nulls in paths
+
+---
+ ext/dom/document.c | 22 +++++++++++++++++-----
+ ext/gd/gd.c        | 16 ++++++++--------
+ 2 files changed, 25 insertions(+), 13 deletions(-)
+
+diff --git a/ext/dom/document.c b/ext/dom/document.c
+index 48a19dd..097fcba 100644
+--- a/ext/dom/document.c
++++ b/ext/dom/document.c
+@@ -1754,7 +1754,7 @@ PHP_FUNCTION(dom_document_save)
+ 	char *file;
+ 	long options = 0;
+ 
+-	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os|l", &id, dom_document_class_entry, &file, &file_len, &options) == FAILURE) {
++	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Op|l", &id, dom_document_class_entry, &file, &file_len, &options) == FAILURE) {
+ 		return;
+ 	}
+ 
+@@ -1983,7 +1983,7 @@ static void _dom_document_schema_validat
+ 	int                     is_valid;
+ 	char resolved_path[MAXPATHLEN + 1];
+ 
+-	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Op", &id, dom_document_class_entry, &source, &source_len) == FAILURE) {
++	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os", &id, dom_document_class_entry, &source, &source_len) == FAILURE) {
+ 		return;
+ 	}
+ 
+@@ -1996,6 +1996,10 @@ static void _dom_document_schema_validat
+ 
+ 	switch (type) {
+ 	case DOM_LOAD_FILE:
++		if (CHECK_NULL_PATH(source, source_len)) {
++			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid Schema file source");
++			RETURN_FALSE;
++		}
+ 		valid_file = _dom_get_valid_file_path(source, resolved_path, MAXPATHLEN  TSRMLS_CC);
+ 		if (!valid_file) {
+ 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid Schema file source");
+@@ -2072,7 +2076,7 @@ static void _dom_document_relaxNG_valida
+ 	int                     is_valid;
+ 	char resolved_path[MAXPATHLEN + 1];
+ 
+-	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Op", &id, dom_document_class_entry, &source, &source_len) == FAILURE) {
++	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os", &id, dom_document_class_entry, &source, &source_len) == FAILURE) {
+ 		return;
+ 	}
+ 
+@@ -2085,6 +2089,10 @@ static void _dom_document_relaxNG_valida
+ 
+ 	switch (type) {
+ 	case DOM_LOAD_FILE:
++		if (CHECK_NULL_PATH(source, source_len)) {
++			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid RelaxNG file source");
++			RETURN_FALSE;
++		}
+ 		valid_file = _dom_get_valid_file_path(source, resolved_path, MAXPATHLEN  TSRMLS_CC);
+ 		if (!valid_file) {
+ 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid RelaxNG file source");
+@@ -2165,7 +2173,7 @@ static void dom_load_html(INTERNAL_FUNCT
+ 	
+ 	id = getThis();
+ 
+-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p|l", &source, &source_len, &options) == FAILURE) {
++	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l", &source, &source_len, &options) == FAILURE) {
+ 		return;
+ 	}
+ 
+@@ -2175,6 +2183,10 @@ static void dom_load_html(INTERNAL_FUNCT
+ 	}
+ 
+ 	if (mode == DOM_LOAD_FILE) {
++		if (CHECK_NULL_PATH(source, source_len)) {
++			php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid file source");
++			RETURN_FALSE;
++		}
+ 		ctxt = htmlCreateFileParserCtxt(source, NULL);
+ 	} else {
+ 		source_len = xmlStrlen(source);
+@@ -2263,7 +2275,7 @@ PHP_FUNCTION(dom_document_save_html_file
+ 	char *file;
+ 	const char *encoding;
+ 
+-	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os", &id, dom_document_class_entry, &file, &file_len) == FAILURE) {
++	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Op", &id, dom_document_class_entry, &file, &file_len) == FAILURE) {
+ 		return;
+ 	}
+ 
+diff --git a/ext/gd/gd.c b/ext/gd/gd.c
+index d258c3d..e527575 100644
+--- a/ext/gd/gd.c
++++ b/ext/gd/gd.c
+@@ -1790,7 +1790,7 @@ PHP_FUNCTION(imagefilledarc)
+ 	long cx, cy, w, h, ST, E, col, style;
+ 	gdImagePtr im;
+ 	int e, st;
+-	
++
+ 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rllllllll", &IM, &cx, &cy, &w, &h, &ST, &E, &col, &style) == FAILURE) {
+ 		return;
+ 	}
+@@ -2033,7 +2033,7 @@ PHP_FUNCTION(imagegrabwindow)
+ 	if ( handle == 0 ) {
+ 		goto clean;
+ 	}
+-	pPrintWindow = (tPrintWindow) GetProcAddress(handle, "PrintWindow");  
++	pPrintWindow = (tPrintWindow) GetProcAddress(handle, "PrintWindow");
+ 
+ 	if ( pPrintWindow )  {
+ 		pPrintWindow(window, memDC, (UINT) client_area);
+@@ -3984,7 +3984,7 @@ static void php_imagettftext_common(INTERNAL_FUNCTION_PARAMETERS, int mode, int
+ 			if (zend_hash_get_current_data_ex(HASH_OF(EXT), (void **) &item, &pos) == FAILURE) {
+ 				continue;
+ 			}
+-		
++
+ 			if (strcmp("linespacing", key) == 0) {
+ 				convert_to_double_ex(item);
+ 				strex.flags |= gdFTEX_LINESPACE;
+@@ -4006,7 +4006,7 @@ static void php_imagettftext_common(INTERNAL_FUNCTION_PARAMETERS, int mode, int
+ #endif
+ 
+ 	PHP_GD_CHECK_OPEN_BASEDIR(fontname, "Invalid font filename");
+-	
++
+ #ifdef USE_GD_IMGSTRTTF
+ # if HAVE_GD_STRINGFTEX
+ 	if (extended) {
+@@ -4071,7 +4071,7 @@ PHP_FUNCTION(imagepsloadfont)
+ 	struct stat st;
+ #endif
+ 
+-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &file, &file_len) == FAILURE) {
++	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p", &file, &file_len) == FAILURE) {
+ 		return;
+ 	}
+ 
+@@ -4411,11 +4411,11 @@ PHP_FUNCTION(imagepsbbox)
+ 	if (argc != 3 && argc != 6) {
+ 		ZEND_WRONG_PARAM_COUNT();
+ 	}
+-	
++
+ 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "srl|lld", &str, &str_len, &fnt, &sz, &sp, &wd, &angle) == FAILURE) {
+ 		return;
+ 	}
+-	
++
+ 	if (argc == 6) {
+ 		space = sp;
+ 		add_width = wd;
+@@ -4600,7 +4600,7 @@ static void _php_image_convert(INTERNAL_FUNCTION_PARAMETERS, int image_type )
+ #ifdef HAVE_GD_JPG
+     long ignore_warning;
+ #endif
+-	
++
+ 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "pplll", &f_org, &f_org_len, &f_dest, &f_dest_len, &height, &width, &threshold) == FAILURE) {
+ 		return;
+ 	}
+-- 
+2.1.4

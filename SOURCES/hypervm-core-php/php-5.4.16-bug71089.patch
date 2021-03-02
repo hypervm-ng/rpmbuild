@@ -1,0 +1,31 @@
+From 410eacc1a9b50ec3cb6c5fc0ff252516d0c0a4f1 Mon Sep 17 00:00:00 2001
+From: Remi Collet <remi@php.net>
+Date: Fri, 11 Dec 2015 13:21:24 +0100
+Subject: [PATCH] Fix Bug #71089 No check to duplicate zend_extension
+
+---
+ Zend/zend_extensions.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/Zend/zend_extensions.c b/Zend/zend_extensions.c
+index 8321f1c..fbf1f32 100644
+--- a/Zend/zend_extensions.c
++++ b/Zend/zend_extensions.c
+@@ -105,6 +105,14 @@ int zend_load_extension(const char *path)
+ #endif
+ 		DL_UNLOAD(handle);
+ 		return FAILURE;
++	} else if (zend_get_extension(new_extension->name)) {
++		fprintf(stderr, "Cannot load %s - extension already loaded\n", new_extension->name);
++/* See http://support.microsoft.com/kb/190351 */
++#ifdef PHP_WIN32
++		fflush(stderr);
++#endif
++		DL_UNLOAD(handle);
++		return FAILURE;
+ 	}
+ 
+ 	return zend_register_extension(new_extension, handle);
+-- 
+2.1.4
+

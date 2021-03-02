@@ -1,0 +1,83 @@
+Backported from 5.5.14
+Adapted for PHP 5.4.16 from
+
+From a05611358606ca21672c49d26c77b7b0c81cab07 Mon Sep 17 00:00:00 2001
+From: Felipe Pena <felipensp@gmail.com>
+Date: Sun, 22 Dec 2013 09:42:45 -0200
+Subject: [PATCH] - Fixed bug #66311 (Stack smashing protection kills PDO/ODBC
+ queries) patch by: michael at orlitzky dot com
+
+---
+ ext/pdo_odbc/odbc_stmt.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/ext/pdo_odbc/odbc_stmt.c b/ext/pdo_odbc/odbc_stmt.c
+index 89b6721..e0d7e62 100644
+--- a/ext/pdo_odbc/odbc_stmt.c
++++ b/ext/pdo_odbc/odbc_stmt.c
+@@ -546,7 +546,8 @@ static int odbc_stmt_describe(pdo_stmt_t
+ 	zend_bool dyn = FALSE;
+ 	RETCODE rc;
+ 	SWORD	colnamelen;
+-	SDWORD	colsize, displaysize;
++	SDWORD	colsize;
++	SQLLEN displaysize;
+ 
+ 	rc = SQLDescribeCol(S->stmt, colno+1, S->cols[colno].colname,
+ 			sizeof(S->cols[colno].colname)-1, &colnamelen,
+
+From 186ffcb72c982b0235761bdd6388ff1c36d79568 Mon Sep 17 00:00:00 2001
+From: Andrew Kehrig <kehrigan@gmail.com>
+Date: Mon, 24 Feb 2014 12:01:58 -0500
+Subject: [PATCH] Fix #50444: PDO-ODBC changes for 64-bit
+
+This bug is also referenced in
+[#61777](https://bugs.php.net/bug.php?id=61777) and is still present in
+the latest stable release of the 5.5 branch. I see two tickets exist for
+this problem already, and I'm just submitting these changes via github
+as a reminder that this is a serious problem for anyone using PDO_ODBC
+on the x64 builds.
+---
+ NEWS                            | 3 +++
+ ext/pdo_odbc/odbc_stmt.c        | 4 ++--
+ ext/pdo_odbc/php_pdo_odbc_int.h | 2 +-
+ 3 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/ext/pdo_odbc/odbc_stmt.c b/ext/pdo_odbc/odbc_stmt.c
+index 8b0ccf3..1d275cd 100644
+--- a/ext/pdo_odbc/odbc_stmt.c
++++ b/ext/pdo_odbc/odbc_stmt.c
+@@ -279,7 +279,7 @@ static int odbc_stmt_param_hook(pdo_stmt_t *stmt, struct pdo_bound_param_data *p
+ 	pdo_odbc_stmt *S = (pdo_odbc_stmt*)stmt->driver_data;
+ 	RETCODE rc;
+ 	SWORD sqltype = 0, ctype = 0, scale = 0, nullable = 0;
+-	UDWORD precision = 0;
++	SQLULEN precision = 0;
+ 	pdo_odbc_param *P;
+ 	
+ 	/* we're only interested in parameters for prepared SQL right now */
+@@ -546,7 +546,7 @@ static int odbc_stmt_describe(pdo_stmt_t
+ 	zend_bool dyn = FALSE;
+ 	RETCODE rc;
+ 	SWORD	colnamelen;
+-	SDWORD	colsize;
++	SQLULEN	colsize;
+ 	SQLLEN displaysize;
+ 
+ 	rc = SQLDescribeCol(S->stmt, colno+1, S->cols[colno].colname,
+diff --git a/ext/pdo_odbc/php_pdo_odbc_int.h b/ext/pdo_odbc/php_pdo_odbc_int.h
+index 87b2f91..5e42951 100644
+--- a/ext/pdo_odbc/php_pdo_odbc_int.h
++++ b/ext/pdo_odbc/php_pdo_odbc_int.h
+@@ -157,7 +157,7 @@ typedef struct {
+ } pdo_odbc_stmt;
+ 
+ typedef struct {
+-	SQLINTEGER len;
++	SQLLEN len;
+ 	SQLSMALLINT paramtype;
+ 	char *outbuf;
+ 	unsigned is_unicode:1;
+-- 
+2.1.4
+

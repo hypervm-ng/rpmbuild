@@ -1,0 +1,91 @@
+From eb6941e902e02332019d8cba2ed7a9100fd914b3 Mon Sep 17 00:00:00 2001
+From: Paul Annesley <paul@annesley.cc>
+Date: Wed, 19 Feb 2014 11:48:40 -0800
+Subject: [PATCH] add clear_env option to FPM config
+
+This makes it possible to leave the envoronment as is on startup and
+pass all the variables to the workers.
+The default value of clear_env is "yes", preserving previous behaviour.
+Patch by Paul Annesley.
+---
+ sapi/fpm/fpm/fpm_conf.c  | 3 +++
+ sapi/fpm/fpm/fpm_conf.h  | 1 +
+ sapi/fpm/fpm/fpm_env.c   | 4 +++-
+ sapi/fpm/php-fpm.conf.in | 9 +++++++++
+ 4 files changed, 16 insertions(+), 1 deletion(-)
+
+diff --git a/sapi/fpm/fpm/fpm_conf.c b/sapi/fpm/fpm/fpm_conf.c
+index cd5fc34d0f2d..688c6402505e 100644
+--- a/sapi/fpm/fpm/fpm_conf.c
++++ b/sapi/fpm/fpm/fpm_conf.c
+@@ -148,6 +148,7 @@ static struct ini_value_parser_s ini_fpm_pool_options[] = {
+ 	{ "chroot",                    &fpm_conf_set_string,      WPO(chroot) },
+ 	{ "chdir",                     &fpm_conf_set_string,      WPO(chdir) },
+ 	{ "catch_workers_output",      &fpm_conf_set_boolean,     WPO(catch_workers_output) },
++	{ "clear_env",                 &fpm_conf_set_boolean,     WPO(clear_env) },
+ 	{ "security.limit_extensions", &fpm_conf_set_string,      WPO(security_limit_extensions) },
+ 	{ 0, 0, 0 }
+ };
+@@ -603,6 +604,7 @@ static void *fpm_worker_pool_config_alloc() /* {{{ */
+ 	wp->config->listen_backlog = FPM_BACKLOG_DEFAULT;
+ 	wp->config->pm_process_idle_timeout = 10; /* 10s by default */
+ 	wp->config->process_priority = 64; /* 64 means unset */
++	wp->config->clear_env = 1;
+ 
+ 	if (!fpm_worker_all_pools) {
+ 		fpm_worker_all_pools = wp;
+@@ -1600,6 +1602,7 @@ static void fpm_conf_dump() /* {{{ */
+ 		zlog(ZLOG_NOTICE, "\tchroot = %s",                     STR2STR(wp->config->chroot));
+ 		zlog(ZLOG_NOTICE, "\tchdir = %s",                      STR2STR(wp->config->chdir));
+ 		zlog(ZLOG_NOTICE, "\tcatch_workers_output = %s",       BOOL2STR(wp->config->catch_workers_output));
++		zlog(ZLOG_NOTICE, "\tclear_env = %s",                  BOOL2STR(wp->config->clear_env));
+ 		zlog(ZLOG_NOTICE, "\tsecurity.limit_extensions = %s",  wp->config->security_limit_extensions);
+ 
+ 		for (kv = wp->config->env; kv; kv = kv->next) {
+diff --git a/sapi/fpm/fpm/fpm_conf.h b/sapi/fpm/fpm/fpm_conf.h
+index efd65dc6d9d7..19bd7ff1f806 100644
+--- a/sapi/fpm/fpm/fpm_conf.h
++++ b/sapi/fpm/fpm/fpm_conf.h
+@@ -83,6 +83,7 @@ struct fpm_worker_pool_config_s {
+ 	char *chroot;
+ 	char *chdir;
+ 	int catch_workers_output;
++	int clear_env;
+ 	char *security_limit_extensions;
+ 	struct key_value_s *env;
+ 	struct key_value_s *php_admin_values;
+diff --git a/sapi/fpm/fpm/fpm_env.c b/sapi/fpm/fpm/fpm_env.c
+index 6b64fedfec47..2ff0bdc0e4bc 100644
+--- a/sapi/fpm/fpm/fpm_env.c
++++ b/sapi/fpm/fpm/fpm_env.c
+@@ -143,7 +143,9 @@ int fpm_env_init_child(struct fpm_worker_pool_s *wp) /* {{{ */
+ 	fpm_env_setproctitle(title);
+ 	efree(title);
+ 
+-	clearenv();
++	if (wp->config->clear_env) {
++		clearenv();
++	}
+ 
+ 	for (kv = wp->config->env; kv; kv = kv->next) {
+ 		setenv(kv->key, kv->value, 1);
+diff --git a/sapi/fpm/php-fpm.conf.in b/sapi/fpm/php-fpm.conf.in
+index af4f2fa325a3..6ce9b6325636 100644
+--- a/sapi/fpm/php-fpm.conf.in
++++ b/sapi/fpm/php-fpm.conf.in
+@@ -475,6 +475,15 @@ pm.max_spare_servers = 3
+ ; Default Value: no
+ ;catch_workers_output = yes
+ 
++; Clear environment in FPM workers
++; Prevents arbitrary environment variables from reaching FPM worker processes
++; by clearing the environment in workers before env vars specified in this
++; pool configuration are added.
++; Setting to "no" will make all environment variables available to PHP code
++; via getenv(), $_ENV and $_SERVER.
++; Default Value: yes
++;clear_env = no
++
+ ; Limits the extensions of the main script FPM will allow to parse. This can
+ ; prevent configuration mistakes on the web server side. You should only limit
+ ; FPM to .php extensions to prevent malicious users to use other extensions to
