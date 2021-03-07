@@ -1,6 +1,6 @@
 Summary: Webserver for LxCenter products (based on lighttpd)
 Name: lxlighttpd
-Version: 1.4.39
+Version: 1.4.59
 Release: 1%{?dist}
 License: BSD
 Group: System Environment/Daemons
@@ -53,6 +53,8 @@ This is the Core GUI webserver for HyperVM-NG product (based on lighttpd)
 %defattr(-,root,root,-)
 %dir %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd"
 %dir %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_ajp13.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_ajp13.so"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_access.la"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_access.so"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_accesslog.la"
@@ -65,8 +67,8 @@ This is the Core GUI webserver for HyperVM-NG product (based on lighttpd)
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_cgi.so"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_cml.la"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_cml.so"
-%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_compress.la"
-%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_compress.so"
+# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_compress.la"
+# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_compress.so"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_dirlisting.la"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_dirlisting.so"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_evasive.la"
@@ -87,6 +89,8 @@ This is the Core GUI webserver for HyperVM-NG product (based on lighttpd)
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_magnet.so"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_mysql_vhost.la"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_mysql_vhost.so"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_openssl.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_openssl.so"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_proxy.la"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_proxy.so"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_redirect.la"
@@ -103,6 +107,8 @@ This is the Core GUI webserver for HyperVM-NG product (based on lighttpd)
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_setenv.so"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_simple_vhost.la"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_simple_vhost.so"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_sockproxy.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_sockproxy.so"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_ssi.la"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_ssi.so"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_staticfile.la"
@@ -115,22 +121,28 @@ This is the Core GUI webserver for HyperVM-NG product (based on lighttpd)
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_userdir.so"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_usertrack.la"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_usertrack.so"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_vhostdb_mysql.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_vhostdb_mysql.so"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_vhostdb.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_vhostdb.so"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_webdav.la"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_webdav.so"
-# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_file.la"
-# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_file.so"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_wstunnel.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_wstunnel.so"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_file.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_file.so"
 # %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_gssapi.la"
 # %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_gssapi.so"
 # %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_ldap.la"
 # %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_ldap.so"
-# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_mysql.la"
-# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_mysql.so"
-# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_deflate.la"
-# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_deflate.so"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_mysql.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_authn_mysql.so"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_deflate.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_deflate.so"
 # %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_geoip.la"
 # %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_geoip.so"
-# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_uploadprogress.la"
-# %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_uploadprogress.so"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_uploadprogress.la"
+%attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/lib/mod_uploadprogress.so"
 %dir %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/sbin"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/sbin/lighttpd"
 %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/sbin/lighttpd-angel"
@@ -138,8 +150,13 @@ This is the Core GUI webserver for HyperVM-NG product (based on lighttpd)
 %dir %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/share/man"
 %dir %attr(0755 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/share/man/man8"
 %attr(0644 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/share/man/man8/lighttpd.8"
+%attr(0644 lxlabs lxlabs) "/usr/local/lxlabs/ext/lxlighttpd/share/man/man8/lighttpd-angel.8"
+
 
 %changelog
+* Wed Mar 3 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 1.4.59-1
+- Upstream 1.4.59
+
 * Sun Oct 16 2016 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 1.4.39-1
 - Downgrade to 1.4.39, newer versions have an issue with login into HyperVM
 
