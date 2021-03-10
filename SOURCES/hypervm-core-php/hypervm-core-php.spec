@@ -1,7 +1,7 @@
 %define name 	hypervm-core-php
 %define packagename php
 %define version 5.4.16
-%define release 8%{?dist}
+%define release 9%{?dist}
 %define brand   lxlabs
 
 %if 0%{?fedora} < 17 && 0%{?rhel} < 7
@@ -170,7 +170,7 @@ BuildRequires: sqlite-devel >= 3.6.0
 BuildRequires: zlib-devel, smtpdaemon, libedit-devel
 BuildRequires: pcre-devel >= 6.6
 BuildRequires: bzip2, perl, libtool >= 1.4.3, gcc-c++
-BuildRequires: libtool-ltdl-devel
+BuildRequires: libtool-ltdl-devel, make
 %if %{with_libzip}
 BuildRequires: libzip-devel >= 0.10
 %endif
@@ -567,29 +567,32 @@ rm -rf %{buildroot}
 %doc
 
 %changelog
-* Mon Mar 02 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-8
+* Wed Mar 10 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-9
+- Added BuildRequires required by docker rpm builder
+
+* Tue Mar 2 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-8
 - Set memory_limit = 32M
 
-* Mon Mar 02 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-7
+* Tue Mar 2 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-7
 - Enable mysqli.reconnect
 
-* Mon Mar 01 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-6
+* Mon Mar 1 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-6
 - Set short_open_tag back to On
 
-* Mon Mar 01 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-5
+* Mon Mar 1 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-5
 - Added missing BuildRequires
 - Adjusted php.ini
 
-* Mon Mar 01 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-4
+* Mon Mar 1 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-4
 - Missing mysql_sock definition
 
-* Mon Mar 01 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-3
+* Mon Mar 1 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-3
 - Repaired %pre script
 
-* Mon Mar 01 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-2
+* Mon Mar 1 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-2
 - Added Epoch to let yum downgrade from 5.5.x to 5.4.16
 
-* Mon Mar 01 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-1
+* Mon Mar 1 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-1
 - Based on RedHat php-5.4.16-48
 
 * Sun Oct 16 2016 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.5.38-1

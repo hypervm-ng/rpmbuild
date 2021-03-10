@@ -1,7 +1,7 @@
 Summary: Webserver for LxCenter products (based on lighttpd)
 Name: lxlighttpd
 Version: 1.4.59
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: BSD
 Group: System Environment/Daemons
 URL: http://www.hypervm-ng.org
@@ -9,8 +9,8 @@ Source0: lighttpd-%{version}.tar.gz
 BuildRoot: %{_tmppath}/lighttpd-%{version}-%{release}-root
 Requires(pre): /usr/sbin/useradd
 Provides: webserver
-BuildRequires: openssl-devel, pcre-devel, bzip2-devel, zlib-devel
-BuildRequires:  mysql-devel
+BuildRequires: gcc, make, openssl-devel, pcre-devel, bzip2-devel, zlib-devel
+BuildRequires: mysql-devel, gdbm-devel
 BuildRequires: /usr/bin/awk
 BuildRequires: lua-devel
 %if 0%{?rhel} <= 5
@@ -154,6 +154,9 @@ This is the Core GUI webserver for HyperVM-NG product (based on lighttpd)
 
 
 %changelog
+* Wed Mar 3 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 1.4.59-2
+- Added BuildRequires required by docker rpm builder
+
 * Wed Mar 3 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 1.4.59-1
 - Upstream 1.4.59
 
