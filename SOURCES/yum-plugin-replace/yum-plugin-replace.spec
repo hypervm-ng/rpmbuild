@@ -1,7 +1,7 @@
 
 Name: yum-plugin-replace        
 Version:    0.2.5
-Release:    2%{?dist}
+Release:    3%{?dist}
 Summary:    Package Replacement Plugin for Yum
 
 Group:      System Environment/Base     
@@ -52,6 +52,9 @@ rm -rf %{buildroot}
 
 
 %changelog
+* Sat Mar 13 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 0.2.5-3
+- Bump version
+
 * Sun Oct 16 2016 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 0.2.5-2
 - Relese 2
 - Removed ius from Release
