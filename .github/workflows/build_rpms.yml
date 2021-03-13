@@ -8,41 +8,59 @@ jobs:
     name: List packages to build
     runs-on: [ubuntu-latest]
     steps:
-      - name: checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Get changed files for master branch
-        if: github.ref == 'refs/heads/master'
-        id: getfile
-        uses: jitterbit/get-changed-files@v1
-      - name: Get changed files for branch
-        if: github.ref != 'refs/heads/master'
-        id: getfile
+      - uses: actions/checkout@v2
+      - name: Check changed files
+        id: diff
         run: |
-          echo "::set-output name=all::$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }}| xargs)"
-      - name: Build output based on the changed files
-        id: packages
+          # See https://github.community/t/check-pushed-file-changes-with-git-diff-tree-in-github-actions/17220/10
+          if [ $GITHUB_BASE_REF ]; then
+            # Pull Request
+            git fetch origin $GITHUB_BASE_REF --depth=1
+            export DIFF=$( git diff --name-only origin/$GITHUB_BASE_REF $GITHUB_SHA )
+            echo "Diff between origin/$GITHUB_BASE_REF and $GITHUB_SHA"
+          else
+            # Push
+            git fetch origin ${{ github.event.before }} --depth=1
+            export DIFF=$( git diff --name-only ${{ github.event.before }} $GITHUB_SHA )
+            echo "Diff between ${{ github.event.before }} and $GITHUB_SHA"
+          fi
+          echo "$DIFF"
+          # Escape newlines (replace \n with %0A)
+          echo "::set-output name=diff::$( echo "$DIFF" | sed ':a;N;$!ba;s/\n/%0A/g' )"
+      - name: Set matrix for build
+        id: set-matrix
         run: |
-          echo "::set-output name=packages::$(l=1; A=(${{ steps.getfile.outputs.all }}); size=${#A[@]}; echo -n "["; for i in ${A[@]}; do dir=$(dirname $i); echo -n \"$dir\"; if [ $l -lt $size ]; then echo -n ","; let "l = l + 1"; fi; done; echo "]";)"
-    outputs:
-     matrix: ${{ steps.packages.outputs.packages }}
-  test_and_build:
-    needs: list
-    name: CI and send to Copr
-    strategy:
-      matrix:
-        packages: ${{ fromJson(needs.list.outputs.matrix) }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out proper version of sources
-        uses: actions/checkout@v1
-      - name: Sanity build of the rpm package from ${{ matrix.packages }}
-        working-directory: ${{ matrix.packages }}
-        run: |
-          docker run -v ${PWD}:/sources -v ${PWD}:/output:Z quay.io/abn/rpmbuilder:centos-7
-      - name: Build the srpm package from ${{ matrix.packages }}
-        working-directory: ${{ matrix.packages }}
-        run: |
-          docker run -v ${PWD}:/sources -v ${PWD}:/output:Z -e "SRPM_ONLY=1" quay.io/abn/rpmbuilder:centos-7
+          # See https://stackoverflow.com/a/62953566/11948346
+          DIFF="${{ steps.diff.outputs.diff }}"
+          JSON="{\"include\":["
 
+          # Loop by lines
+          while read path; do
+            # Set $directory to substring before /
+            directory="$( echo $path | cut -d'/' -f1 -s )"
+
+            if [ -z "$directory" ]; then
+              continue # Exclude root directory
+            fi
+
+            # Set $os. "ubuntu-latest" by default. if directory starts with windows, then "windows-latest"
+            os="ubuntu-latest"
+
+            # Add build to the matrix only if it is not already included
+            JSONline="{\"directory\": \"$directory\", \"os\": \"$os\"},"
+            if [[ "$JSON" != *"$JSONline"* ]]; then
+              JSON="$JSON$JSONline"
+            fi
+          done <<< "$DIFF"
+
+          # Remove last "," and add closing brackets
+          if [[ $JSON == *, ]]; then
+            JSON="${JSON%?}"
+          fi
+          JSON="$JSON]}"
+          echo $JSON
+
+          # Set output
+          echo "::set-output name=matrix::$( echo "$JSON" )"
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
