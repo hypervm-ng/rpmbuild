@@ -1,7 +1,7 @@
 
 Name: yum-plugin-replace        
 Version:    0.2.5
-Release:    5%{?dist}
+Release:    6%{?dist}
 Summary:    Package Replacement Plugin for Yum
 
 Group:      System Environment/Base     
