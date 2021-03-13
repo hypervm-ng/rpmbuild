@@ -1,7 +1,7 @@
 %define name 	hypervm-core-php
 %define packagename php
 %define version 5.4.16
-%define release 10%{?dist}
+%define release 11%{?dist}
 %define brand   lxlabs
 
 %if 0%{?fedora} < 17 && 0%{?rhel} < 7
@@ -567,6 +567,9 @@ rm -rf %{buildroot}
 %doc
 
 %changelog
+* Sat Mar 13 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-11
+- Bump version
+
 * Sat Mar 13 2021 Krzysztof Taraszka <krzysztof.taraszka@hypervm-ng.org> 5.4.16-10
 - Bump version
 
