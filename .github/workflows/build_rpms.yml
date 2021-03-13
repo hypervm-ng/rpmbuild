@@ -38,11 +38,9 @@ jobs:
         run: |
           docker run -v ${PWD}:/sources -v ${PWD}:/output:Z quay.io/abn/rpmbuilder:centos-7
       - name: Build the srpm package from ${{ matrix.packages }}
-        env:
-          SRPM_ONLY:  1
         working-directory: ${{ matrix.packages }}
         run: |
-          docker run -v ${PWD}:/sources -v ${PWD}:/output:Z quay.io/abn/rpmbuilder:centos-7
+          docker run -v ${PWD}:/sources -v ${PWD}:/output:Z -e "SRPM_ONLY=1" quay.io/abn/rpmbuilder:centos-7
       - name: Install API token for copr-cli
         env:
           API_LOGIN_CONTENT: ${{ secrets.COPR_API_LOGIN }}
