@@ -1,7 +1,7 @@
 Summary: Webserver for LxCenter products (based on lighttpd)
 Name: lxlighttpd
 Version: 1.4.59
-Release: 6:%{?dist}
+Release: 7%{?dist}
 License: BSD
 Group: System Environment/Daemons
 URL: http://www.hypervm-ng.org
