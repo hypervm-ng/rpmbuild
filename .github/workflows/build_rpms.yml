@@ -20,9 +20,16 @@ jobs:
             echo "Diff between origin/$GITHUB_BASE_REF and $GITHUB_SHA"
           else
             # Push
-            git fetch origin ${{ github.event.before }} --depth=1
-            export DIFF=$( git diff --name-only ${{ github.event.before }} $GITHUB_SHA )
-            echo "Diff between ${{ github.event.before }} and $GITHUB_SHA"
+            GH_EVENT_BEFORE_SHA="${{ github.event.before }}"
+            if [ $GH_EVENT_BEFORE_SHA -eq "0000000000000000000000000000000000000000" ]; then
+              # first commit, taking different approach
+              export DIFF=$( git diff-tree --no-commit-id --name-only -r ${{ github.sha }} )
+              echo "Diff between ${{ github.event.before }} and $GITHUB_SHA"
+            else
+              git fetch origin ${{ github.event.before }} --depth=1
+              export DIFF=$( git diff --name-only ${{ github.event.before }} $GITHUB_SHA )
+              echo "Diff between ${{ github.event.before }} and $GITHUB_SHA"
+            fi
           fi
           echo "$DIFF"
           # Escape newlines (replace \n with %0A)
