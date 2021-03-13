@@ -1,0 +1,70 @@
+name: Build and publish rpm packages
+on:
+  push:
+    paths:
+      - '**/*.spec'
+jobs:
+  list:
+    name: List packages to build
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Get changed files
+        id: getfile
+        run: |
+          echo "::set-output name=files::$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }}| xargs)"
+
+      - name: Build output based on the changed files
+        id: packages
+        run: |
+          echo "::set-output name=packages::$(l=1; A=(${{ steps.getfile.outputs.files }}); size=${#A[@]}; echo -n "["; for i in ${A[@]}; do dir=$(dirname $i); echo -n \"$dir\"; if [ $l -lt $size ]; then echo -n ","; let "l = l + 1"; fi; done; echo "]";)"
+    outputs:
+     matrix: ${{ steps.packages.outputs.packages }}
+  test_and_build:
+    needs: list
+    name: CI and send to Copr
+    strategy:
+      matrix:
+        packages: ${{ fromJson(needs.list.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out proper version of sources
+        uses: actions/checkout@v1
+      - name: Sanity build of the rpm package from ${{ matrix.packages }}
+        working-directory: ${{ matrix.packages }}
+        run: |
+          docker run -v ${PWD}:/sources -v ${PWD}:/output:Z quay.io/abn/rpmbuilder:centos-7
+      - name: Build the srpm package from ${{ matrix.packages }}
+        env:
+          SRPM_ONLY:  1
+        working-directory: ${{ matrix.packages }}
+        run: |
+          docker run -v ${PWD}:/sources -v ${PWD}:/output:Z quay.io/abn/rpmbuilder:centos-7
+      - name: Install API token for copr-cli
+        env:
+          API_LOGIN_CONTENT: ${{ secrets.COPR_API_LOGIN }}
+          API_USERNAME_CONTENT: ${{ secrets.COPR_API_USERNAME }}
+          API_TOKEN_CONTENT: ${{ secrets.COPR_API_TOKEN }}
+        run: |
+          mkdir -p "$HOME/.config"
+          echo "[copr-cli]" > "$HOME/.config/copr"
+          echo "login = $API_LOGIN_CONTENT" >> "$HOME/.config/copr"
+          echo "username = $API_USERNAME_CONTENT" >> "$HOME/.config/copr"
+          echo "token = $API_TOKEN_CONTENT" >> "$HOME/.config/copr"
+          echo "copr_url = https://copr.fedorainfracloud.org" >> "$HOME/.config/copr"
+      - name: Install tooling for Copr
+        run: |
+          pip install copr-cli
+      - name: Submit the build to hypervm-ng Copr yum repository
+        working-directory: ${{ matrix.packages }}
+        if: github.ref == 'refs/heads/master'
+        run: |
+          $HOME/.local/bin/copr-cli build hypervm/hypervm-ng *.src.rpm
+      - name: Submit the build to hypervm-ng-testing Copr yum repository
+        working-directory: ${{ matrix.packages }}
+        if: github.ref != 'refs/heads/master'
+        run: |
+          $HOME/.local/bin/copr-cli build hypervm/hypervm-ng-testing *.src.rpm
