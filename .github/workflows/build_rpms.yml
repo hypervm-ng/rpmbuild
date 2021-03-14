@@ -12,15 +12,38 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Get changed files
+      - name: Check changed files
         id: getfile
         run: |
-          echo "::set-output name=files::$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }}| xargs)"
-
+          if [ $GITHUB_BASE_REF ]; then
+            # Pull Request
+            git fetch origin $GITHUB_BASE_REF --depth=1
+            export DIFF=$( git diff --name-only origin/$GITHUB_BASE_REF $GITHUB_SHA | xargs )
+            echo "Diff between origin/$GITHUB_BASE_REF and $GITHUB_SHA"
+          else
+            GH_EVENT_BEFORE_SHA="${{ github.event.before }}"
+            if [ $GH_EVENT_BEFORE_SHA == "0000000000000000000000000000000000000000" ]; then
+              # first commit, taking different approach
+              OF_MASTER_SHA=$( diff <( git rev-list "${1:-origin/master}" --reverse --topo-order ) <( git rev-list "${2:-HEAD}" --reverse --topo-order) --unified=1 | sed -ne 's/^ //p' | head -1 )
+              export DIFF=$( git diff-tree --no-commit-id --name-only -r $OF_MASTER_SHA ${{ github.sha }} | xargs )
+              echo "Seems to be a fresh branch, so the diff between $OF_MASTER_SHA and $GITHUB_SHA"
+            else
+              git fetch origin ${{ github.event.before }} --depth=1
+              export DIFF=$( git diff --name-only ${{ github.event.before }} $GITHUB_SHA | xargs )
+              echo "Diff between ${{ github.event.before }} and $GITHUB_SHA"
+            fi
+          fi
+          echo "$DIFF"
+          echo "::set-output name=files::$( echo "$DIFF" )"
       - name: Build output based on the changed files
         id: packages
         run: |
-          echo "::set-output name=packages::$(l=1; A=(${{ steps.getfile.outputs.files }}); size=${#A[@]}; echo -n "["; for i in ${A[@]}; do dir=$(dirname $i); echo -n \"$dir\"; if [ $l -lt $size ]; then echo -n ","; let "l = l + 1"; fi; done; echo "]";)"
+          A=(${{ steps.getfile.outputs.files }});
+          B=();
+          for b in ${A[@]}; do item=$(echo $b | grep \.spec); B+=($item); done
+          export PACKAGES=$(l=1; size=${#B[@]}; echo -n "["; for i in ${B[@]}; do dir=$(dirname $i); echo -n \"$dir\"; if [ $l -lt $size ]; then echo -n ","; let "l = l + 1"; fi; done; echo "]";)
+          echo "$PACKAGES"
+          echo "::set-output name=packages::$( echo $PACKAGES )"
     outputs:
      matrix: ${{ steps.packages.outputs.packages }}
   test_and_build:
